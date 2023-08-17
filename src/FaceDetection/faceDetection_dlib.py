@@ -1,18 +1,27 @@
 import dlib
 import cv2
 import time
+import os
+
 def run_face_detection():
     detector_hog = dlib.get_frontal_face_detector()
 
-    mmod_detector = dlib.cnn_face_detection_model_v1("./pre-trained-model/mmod_human_face_detector.dat")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    cap = cv2.VideoCapture(0)
+    model_path = os.path.join(current_dir, "pre-trained-model", "mmod_human_face_detector.dat")
+
+    mmod_detector = dlib.cnn_face_detection_model_v1(model_path)
+
+    cap = cv2.VideoCapture(1)
 
 
     desired_width = 640
     desired_height = 480
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, desired_width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, desired_height)
+    actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    print(f"Actual Width: {actual_width}, Actual Height: {actual_height}")
 
     roi_x_percent, roi_y_percent = 0.3, 0.3 
     roi_w_percent, roi_h_percent = 0.4, 0.6 

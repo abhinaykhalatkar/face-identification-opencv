@@ -1,5 +1,5 @@
 import hupper
-import faceDetection_dlib
+from FaceDetection import faceDetection_dlib
 
 def main():
     reloader = hupper.start_reloader('Main.main')
