@@ -1,5 +1,6 @@
 import dlib
 import os
+print("DLIB access CUDA" ,dlib.DLIB_USE_CUDA)
 
 def initialize_detectors():
     current_dir = os.path.dirname(os.path.abspath(__file__))
