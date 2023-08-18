@@ -10,9 +10,9 @@ def run_face_detection():
     cap = cv2.VideoCapture(0)
     detection_history = deque(maxlen=5)  ##5frames average ,best of 4
     
-    reset_interval = 2
+    reset_interval = 1
     start_time = time.time()
-    buffer_percentage = 0.1
+    buffer_percentage = 0.06
 
     frame_height, frame_width = cap.read()[1].shape[:2]
     roi_x, roi_y = 0, 0
@@ -28,11 +28,11 @@ def run_face_detection():
         elapsed_time = time.time() - start_time
 
         roi_frame = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
-        faces_hog = face_detection.detect_faces(roi_frame, detector_hog, mmod_detector)
-        detection_history.append(1 if len(faces_hog) > 0 else 0)
+        detected_Faces = face_detection.detect_faces(roi_frame, detector_hog, mmod_detector)
+        detection_history.append(1 if len(detected_Faces) > 0 else 0)
 
-        if sum(detection_history) >= 4 and len(faces_hog) > 0:
-            sorted_faces = sorted(faces_hog, key=lambda rect: rect.top())  # Sort by topmost point
+        if sum(detection_history) >= 4 and len(detected_Faces) > 0:
+            sorted_faces = sorted(detected_Faces, key=lambda rect: rect.top())  # Sort by topmost point
             first_face = sorted_faces[0]
             last_face = sorted_faces[-1]
 
@@ -51,7 +51,7 @@ def run_face_detection():
             roi_w, roi_h = frame_width, frame_height
             start_time = time.time()  # Reset the start time
 
-        frame = display.display_results(frame, faces_hog, roi_x, roi_y, roi_w, roi_h)
+        frame = display.display_results(frame, detected_Faces, roi_x, roi_y, roi_w, roi_h)
 
         current_time = time.time()
         fps = 1 / (current_time - prev_time)
