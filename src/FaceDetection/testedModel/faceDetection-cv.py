@@ -1,42 +1,34 @@
 import sys
 sys.path.append(r'C:\Users\abhin\Desktop\face-identification-opencv\src')
 import cv2
+from   fps_reading import FPSCounter
 import time
-import dlib
-from fps_reading import FPSCounter
-
-print(dlib.DLIB_USE_CUDA)
-if dlib.DLIB_USE_CUDA:
-    print("DLIB is using CUDA!")
-else:
-    print("DLIB is NOT using CUDA.")
-
-# Load the MMOD face detector
-mmod_detector = dlib.cnn_face_detection_model_v1("./pre-trained-model/mmod_human_face_detector.dat")
-
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 prev_time = 0
-fps_counter = FPSCounter()
+cap = cv2.VideoCapture(0) 
+
 
 while True:
     ret, frame = cap.read()
-    if not ret:
-        break
+    fps_counter = FPSCounter()
+
+
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = mmod_detector(gray)
-    for rect in faces:
-        x, y, w, h = rect.rect.left(), rect.rect.top(), rect.rect.width(), rect.rect.height()
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 0), 2)
+    
     current_time = time.time()
     fps = 1 / (current_time - prev_time)
     prev_time = current_time
     fps_counter.update(fps)
     cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    # Display the frame with detected faces and FPS
-    cv2.imshow('Face Detection using dlib-MMOD', frame)
+
+    cv2.imshow('Face Detection-cam1', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         average_fps = fps_counter.get_average_fps()
@@ -49,3 +41,4 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+
