@@ -1,15 +1,40 @@
 import cv2
 import time
+import pickle
+import dlib
+import numpy as np
 from collections import deque
 from .detectors import initialize, face_detection, display
 from fps_reading import FPSCounter
 
+with open("C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/embeddings.pkl", "rb") as f:
+    saved_embeddings, saved_labels = pickle.load(f)
+    
+face_rec_model_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/dlib_face_recognition_resnet_model_v1.dat"
+shape_predictor_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/shape_predictor_68_face_landmarks.dat"
+print(dlib.__version__)
+sp = None
+facerec = None
+
+def initialize_dlib_models():
+    global sp, facerec
+    sp = dlib.shape_predictor(shape_predictor_path)
+    facerec = dlib.face_recognition_model_v1(face_rec_model_path)
+
+def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.6):
+    distances = [np.linalg.norm(np.array(face_descriptor) - np.array(embedding)) for embedding in saved_embeddings]
+    min_distance_index = np.argmin(distances)
+    if distances[min_distance_index] < threshold:
+        return saved_labels[min_distance_index]
+    else:
+        return "Unknown"
+
 def run_face_detection():
+    initialize_dlib_models()
     fps_counter = FPSCounter()
     detector_hog, mmod_detector = initialize.initialize_detectors()
     cap = cv2.VideoCapture(0)
     detection_history = deque(maxlen=5)  ##5frames average ,best of 4
-    
     reset_interval = 1
     start_time = time.time()
     buffer_percentage = 0.06
@@ -30,6 +55,15 @@ def run_face_detection():
         roi_frame = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         detected_Faces = face_detection.detect_faces(roi_frame, detector_hog, mmod_detector)
         detection_history.append(1 if len(detected_Faces) > 0 else 0)
+        
+        for k, d in enumerate(detected_Faces):
+            shape = sp(roi_frame, d) 
+            roi_frame_rgb = cv2.cvtColor(roi_frame, cv2.COLOR_BGR2RGB)
+            face_descriptor = facerec.compute_face_descriptor(roi_frame_rgb, shape)
+            name = identify_face(face_descriptor, saved_embeddings, saved_labels)
+           
+            label_position = (d.left() + roi_x, max(d.top() + roi_y - 10, 15))  # Position label above the face, but not outside the frame
+            cv2.putText(frame, name, label_position, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         if sum(detection_history) >= 4 and len(detected_Faces) > 0:
             sorted_faces = sorted(detected_Faces, key=lambda rect: rect.top())  # Sort by topmost point
@@ -52,6 +86,7 @@ def run_face_detection():
             start_time = time.time()  # Reset the start time
 
         frame = display.display_results(frame, detected_Faces, roi_x, roi_y, roi_w, roi_h)
+
 
         current_time = time.time()
         fps = 1 / (current_time - prev_time)

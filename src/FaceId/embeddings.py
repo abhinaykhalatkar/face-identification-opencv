@@ -20,6 +20,8 @@ class FaceNetEmbeddings:
         preprocessed_img = self.preprocess_image(face_img)
         return self.model.predict(preprocessed_img)
 
-# Usage:
-faceNet = FaceNetEmbeddings("src/model/20180402-114759.pb")
-embedding = faceNet.get_embedding(face_image)
+if __name__ == "__main__":
+    # Usage:
+    faceNet = FaceNetEmbeddings("C://Users/abhin/Desktop/face-identification-opencv/src/model/facenet/20180402-114759.pb")
+    # Provide a valid face_image or read one for testing
+    # embedding = faceNet.get_embedding(face_image)
