@@ -21,7 +21,7 @@ def initialize_dlib_models():
     sp = dlib.shape_predictor(shape_predictor_path)
     facerec = dlib.face_recognition_model_v1(face_rec_model_path)
 
-def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.6):
+def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.61):
     distances = [np.linalg.norm(np.array(face_descriptor) - np.array(embedding)) for embedding in saved_embeddings]
     min_distance_index = np.argmin(distances)
     if distances[min_distance_index] < threshold:
@@ -37,7 +37,7 @@ def run_face_detection():
     detection_history = deque(maxlen=5)  ##5frames average ,best of 4
     reset_interval = 1
     start_time = time.time()
-    buffer_percentage = 0.06
+    buffer_percentage = 0.08
 
     frame_height, frame_width = cap.read()[1].shape[:2]
     roi_x, roi_y = 0, 0
