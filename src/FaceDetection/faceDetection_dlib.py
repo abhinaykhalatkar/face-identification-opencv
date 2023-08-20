@@ -27,6 +27,7 @@ add_person_clicked = False
 exit_requested = False
 user_Names_for_oneNote= []
 is_namelist_requested=False
+user_celar_requested=False
 
 def add_to_user_Names_for_oneNote(new_string):
     if new_string not in user_Names_for_oneNote and 'unknown' not in new_string.lower():
@@ -53,14 +54,19 @@ def on_add_person_click():
 def handle_key_press(event):
     global is_namelist_requested
     global exit_requested
+    global user_celar_requested
     if event.char == 'q':
        exit_requested = True
     elif event.char == 'w':
         is_namelist_requested = True
+    elif event.char == 'c':
+        user_celar_requested = True
+    
     
 def capture_face_and_save(detector, cap):
     start_time = time.time()
     captured_images = []
+
 
     while time.time() - start_time < 3: 
         ret, frame = cap.read()
@@ -89,7 +95,9 @@ def save_captured_images(name, images):
         cv2.imwrite(os.path.join(save_path, f"{name}_{idx}.jpg"), img)
 
 def run_face_detection(video_canvas,root):
-    global all_windows_closed 
+    global all_windows_closed
+    global is_namelist_requested
+    global user_celar_requested
     initialize_dlib_models()
     fps_counter = FPSCounter()
     detector_hog, mmod_detector = initialize.initialize_detectors()
@@ -168,21 +176,27 @@ def run_face_detection(video_canvas,root):
         video_canvas.image = frame_tk
 
         video_canvas.update()
-
-        if add_person_clicked or exit_requested or all_windows_closed or is_namelist_requested:
+        if is_namelist_requested:
+            print(user_Names_for_oneNote)
+            is_namelist_requested=False
+        if user_celar_requested:
+            user_Names_for_oneNote.clear()
+            print("user list cleared")
+            user_celar_requested=False
+        if add_person_clicked or exit_requested or all_windows_closed:
             break
 
     cap.release()
     cv2.destroyAllWindows()
     
-    if is_namelist_requested:
-        print(user_Names_for_oneNote)
+    
+        
 
     if add_person_clicked:
-
         video_canvas.master.destroy()
         open_face_capture_window()
         all_windows_closed = True
 
     if exit_requested:
+        print(user_Names_for_oneNote)
         root.quit() 
