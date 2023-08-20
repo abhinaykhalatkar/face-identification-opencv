@@ -6,6 +6,7 @@ model/
 training_data/
 # C extensions
 *.so
+*.pkl
 
 # Distribution / packaging
 .Python

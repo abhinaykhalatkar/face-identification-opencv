@@ -4,28 +4,34 @@ sys.path.append('C:/Users/abhin/Desktop/face-identification-opencv/src')
 import cv2
 import time
 import os
-from FaceDetection.detectors import face_detection ,initialize
+import threading
+from FaceDetection.detectors import face_detection ,initialize,display
 from tkinter import simpledialog
 import tkinter as tk
 from PIL import Image, ImageTk
 import subprocess
 from FaceId.training_data.recogTraining import train_model
 
+
 def start_face_capture(video_canvas, start_capturing=False):
     cap = cv2.VideoCapture(1)
     captured_images = []
-    continue_updating = True  # Flag to determine whether to continue updating the canvas
+    continue_updating = True  
 
-    # Initialize the detectors
     detector_hog, mmod_detector = initialize.initialize_detectors()
 
     def update_canvas():
-        if not continue_updating:  # Check the flag before updating
-            return
-
         ret, frame = cap.read()
         if not ret:
             return
+        detected_faces = face_detection.detect_faces(frame, detector_hog, mmod_detector)
+
+        if detected_faces:
+            face = detected_faces[0]
+            roi_x, roi_y, roi_w, roi_h = face.left(), face.top(), face.width(), face.height()
+            frame = display.display_results(frame, detected_faces, roi_x, roi_y, roi_w, roi_h, show_roi=True)
+        else:
+            roi_x, roi_y, roi_w, roi_h = 0, 0, frame.shape[1], frame.shape[0]
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_pil = Image.fromarray(frame_rgb)
@@ -33,12 +39,13 @@ def start_face_capture(video_canvas, start_capturing=False):
         video_canvas.create_image(0, 0, anchor=tk.NW, image=frame_tk)
         video_canvas.image = frame_tk
 
-        video_canvas.after(10, update_canvas)  
+        if continue_updating:
+            video_canvas.after(10, update_canvas)  
 
     def capture_images():
         nonlocal continue_updating  
         start_time = time.time()
-        while time.time() - start_time < 3:
+        while time.time() - start_time < 5:
             ret, frame = cap.read()
             if not ret:
                 break
@@ -47,7 +54,6 @@ def start_face_capture(video_canvas, start_capturing=False):
                 x, y, w, h = (face.left(), face.top(), face.width(), face.height())
                 cropped_face = frame[y:y+h, x:x+w]
                 captured_images.append(cropped_face)
-            update_canvas()  
 
         continue_updating = False  
         cap.release() 
@@ -63,12 +69,11 @@ def start_face_capture(video_canvas, start_capturing=False):
             for idx, img in enumerate(captured_images):
                 cv2.imwrite(os.path.join(save_path, f"{name}_{idx}.jpg"), img)
 
-
         video_canvas.master.master.destroy()
         video_canvas.master.master.master.destroy()
         train_model()
 
-
     update_canvas() 
     if start_capturing:
         capture_images()
+

@@ -6,7 +6,7 @@ import pickle
 import dlib
 import numpy as np
 from collections import deque
-from .detectors import initialize, face_detection, displayq
+from .detectors import initialize, face_detection, display
 from fps_reading import FPSCounter
 # from UI.face_capture_ui import open_face_capture_window
 from PIL import Image, ImageTk
@@ -25,6 +25,12 @@ facerec = None
 all_windows_closed = False
 add_person_clicked = False
 exit_requested = False
+user_Names_for_oneNote= []
+is_namelist_requested=False
+
+def add_to_user_Names_for_oneNote(new_string):
+    if new_string not in user_Names_for_oneNote and 'unknown' not in new_string.lower():
+        user_Names_for_oneNote.append(new_string)
 
 
 def initialize_dlib_models():
@@ -32,7 +38,7 @@ def initialize_dlib_models():
     sp = dlib.shape_predictor(shape_predictor_path)
     facerec = dlib.face_recognition_model_v1(face_rec_model_path)
 
-def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.55):
+def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.5):
     distances = [np.linalg.norm(np.array(face_descriptor) - np.array(embedding)) for embedding in saved_embeddings]
     min_distance_index = np.argmin(distances)
     if distances[min_distance_index] < threshold:
@@ -44,10 +50,13 @@ def on_add_person_click():
     global add_person_clicked
     add_person_clicked = True
 
-def on_key_press(event):
+def handle_key_press(event):
+    global is_namelist_requested
     global exit_requested
     if event.char == 'q':
-        exit_requested = True
+       exit_requested = True
+    elif event.char == 'w':
+        is_namelist_requested = True
     
 def capture_face_and_save(detector, cap):
     start_time = time.time()
@@ -96,7 +105,8 @@ def run_face_detection(video_canvas,root):
 
     prev_time = 0
 
-    root.bind_all("<Key>", on_key_press)
+    root.bind_all("<Key>", handle_key_press)
+
 
 
     video_canvas.focus_set()
@@ -117,6 +127,7 @@ def run_face_detection(video_canvas,root):
             roi_frame_rgb = cv2.cvtColor(roi_frame, cv2.COLOR_BGR2RGB)
             face_descriptor = facerec.compute_face_descriptor(roi_frame_rgb, shape)
             name = identify_face(face_descriptor, saved_embeddings, saved_labels)
+            add_to_user_Names_for_oneNote(name)
            
             label_position = (d.left() + roi_x, max(d.top() + roi_y - 10, 15))
             cv2.putText(frame, name, label_position, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
@@ -158,11 +169,14 @@ def run_face_detection(video_canvas,root):
 
         video_canvas.update()
 
-        if add_person_clicked or exit_requested or all_windows_closed:
+        if add_person_clicked or exit_requested or all_windows_closed or is_namelist_requested:
             break
 
     cap.release()
     cv2.destroyAllWindows()
+    
+    if is_namelist_requested:
+        print(user_Names_for_oneNote)
 
     if add_person_clicked:
 
