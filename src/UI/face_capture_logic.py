@@ -33,12 +33,12 @@ def start_face_capture(video_canvas, start_capturing=False):
         video_canvas.create_image(0, 0, anchor=tk.NW, image=frame_tk)
         video_canvas.image = frame_tk
 
-        video_canvas.after(10, update_canvas)  # Update the canvas every 10ms
+        video_canvas.after(10, update_canvas)  
 
     def capture_images():
-        nonlocal continue_updating  # Declare the flag as nonlocal to modify it
+        nonlocal continue_updating  
         start_time = time.time()
-        while time.time() - start_time < 3:  # Capture for 3 seconds
+        while time.time() - start_time < 3:
             ret, frame = cap.read()
             if not ret:
                 break
@@ -47,12 +47,11 @@ def start_face_capture(video_canvas, start_capturing=False):
                 x, y, w, h = (face.left(), face.top(), face.width(), face.height())
                 cropped_face = frame[y:y+h, x:x+w]
                 captured_images.append(cropped_face)
-            update_canvas()  # Update the canvas with the latest frame
+            update_canvas()  
 
-        continue_updating = False  # Stop updating the canvas
-        cap.release()  # Release the camera
+        continue_updating = False  
+        cap.release() 
 
-        # Prompt for name and save images
         name = simpledialog.askstring("Input", "What's your name?")
         if name:
             save_path = f"src/FaceId/training_data/{name}"
@@ -64,13 +63,12 @@ def start_face_capture(video_canvas, start_capturing=False):
             for idx, img in enumerate(captured_images):
                 cv2.imwrite(os.path.join(save_path, f"{name}_{idx}.jpg"), img)
 
-        # video_canvas.master.destroy()  # Close the capture window
+
         video_canvas.master.master.destroy()
         video_canvas.master.master.master.destroy()
         train_model()
 
 
-    update_canvas()  # Start updating the canvas
-
+    update_canvas() 
     if start_capturing:
         capture_images()

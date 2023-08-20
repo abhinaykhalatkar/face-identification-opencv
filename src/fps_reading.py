@@ -1,9 +1,9 @@
 class FPSCounter:
     def __init__(self):
-        self.total_fps = 0.0  # Total FPS accumulated
-        self.frame_count = 0  # Number of frames processed
-        self.lowest_fps = float('inf')  # Initialize with a very high value
-        self.highest_fps = 0.0  # Initialize with zero
+        self.total_fps = 0.0
+        self.frame_count = 0  
+        self.lowest_fps = float('inf')  
+        self.highest_fps = 0.0  
 
     def update(self, fps):
         """Update the FPS counter with a new FPS value."""

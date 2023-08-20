@@ -32,7 +32,6 @@ while True:
     fps_counter.update(fps)
     cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    # Display the frame with detected faces and FPS
     cv2.imshow('Face Detection using dlib-hog', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):

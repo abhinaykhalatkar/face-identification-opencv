@@ -6,7 +6,7 @@ import pickle
 import dlib
 import numpy as np
 from collections import deque
-from .detectors import initialize, face_detection, display
+from .detectors import initialize, face_detection, displayq
 from fps_reading import FPSCounter
 # from UI.face_capture_ui import open_face_capture_window
 from PIL import Image, ImageTk
@@ -53,7 +53,7 @@ def capture_face_and_save(detector, cap):
     start_time = time.time()
     captured_images = []
 
-    while time.time() - start_time < 3:  # Capture for 3 seconds
+    while time.time() - start_time < 3: 
         ret, frame = cap.read()
         if not ret:
             break
@@ -85,7 +85,7 @@ def run_face_detection(video_canvas,root):
     fps_counter = FPSCounter()
     detector_hog, mmod_detector = initialize.initialize_detectors()
     cap = cv2.VideoCapture(1)
-    detection_history = deque(maxlen=5)  # 5 frames average, best of 4
+    detection_history = deque(maxlen=5) 
     reset_interval = 1
     start_time = time.time()
     buffer_percentage = 0.08
@@ -122,24 +122,23 @@ def run_face_detection(video_canvas,root):
             cv2.putText(frame, name, label_position, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         if sum(detection_history) >= 4 and len(detected_Faces) > 0:
-            sorted_faces = sorted(detected_Faces, key=lambda rect: rect.top())  # Sort by topmost point
+            sorted_faces = sorted(detected_Faces, key=lambda rect: rect.top())  
             first_face = sorted_faces[0]
             last_face = sorted_faces[-1]
 
             buffer_w = int(buffer_percentage * frame_width)
             buffer_h = int(buffer_percentage * frame_height)
 
-            # Adjust the roi_x and roi_y values to be relative to the full frame
+        
             roi_x = max(0, roi_x + first_face.left() - buffer_w)
             roi_y = max(0, roi_y + first_face.top() - buffer_h)
             roi_w = min(frame_width - roi_x, (last_face.right() - first_face.left()) + 2 * buffer_w)
             roi_h = min(frame_height - roi_y, (last_face.bottom() - first_face.top()) + 2 * buffer_h)
-        # ...
-        # Reset the ROI every reset_interval seconds
+    
         if elapsed_time > reset_interval:
             roi_x, roi_y = 0, 0
             roi_w, roi_h = frame_width, frame_height
-            start_time = time.time()  # Reset the start time
+            start_time = time.time()  
 
         frame = display.display_results(frame, detected_Faces, roi_x, roi_y, roi_w, roi_h)
 
@@ -157,7 +156,7 @@ def run_face_detection(video_canvas,root):
         video_canvas.create_image(0, 0, anchor=tk.NW, image=frame_tk)
         video_canvas.image = frame_tk
 
-        video_canvas.update()  # Update the canvas to show the latest frame
+        video_canvas.update()
 
         if add_person_clicked or exit_requested or all_windows_closed:
             break
@@ -166,10 +165,10 @@ def run_face_detection(video_canvas,root):
     cv2.destroyAllWindows()
 
     if add_person_clicked:
-        # from ..UI.face_capture_ui import open_face_capture_window
+
         video_canvas.master.destroy()
         open_face_capture_window()
         all_windows_closed = True
 
     if exit_requested:
-        root.quit()  # This will close the main window
+        root.quit() 

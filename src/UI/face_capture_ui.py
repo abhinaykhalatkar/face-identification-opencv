@@ -5,7 +5,6 @@ def open_face_capture_window():
     window = tk.Toplevel()
     window.title("Face Capture")
 
-    # Display the message at the top
     message_label = tk.Label(window, text="Once clicked on capture button please turn your face from left to right in 3 seconds")
     message_label.pack(pady=10)
 
@@ -21,7 +20,6 @@ def open_face_capture_window():
     capture_btn = tk.Button(btn_frame, text="Capture", command=lambda: start_face_capture(video_canvas, start_capturing=True))
     capture_btn.pack()
 
-    # Start the video feed immediately
     start_face_capture(video_canvas, start_capturing=False)
 
     window.mainloop()

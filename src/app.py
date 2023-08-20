@@ -8,14 +8,12 @@ def main():
     root = tk.Tk()
     root.title("Face Identification")
 
-    # Create a frame for the video feed
     video_frame = tk.Frame(root)
     video_frame.pack(side=tk.LEFT, padx=10, pady=10) 
 
     video_canvas = tk.Canvas(video_frame, width=640, height=480)
     video_canvas.pack()
 
-    # Create a frame for the button
     btn_frame = tk.Frame(root)
     btn_frame.pack(side=tk.RIGHT, padx=10, pady=10)
 

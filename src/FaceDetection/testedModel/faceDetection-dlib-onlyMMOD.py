@@ -11,7 +11,6 @@ if dlib.DLIB_USE_CUDA:
 else:
     print("DLIB is NOT using CUDA.")
 
-# Load the MMOD face detector
 mmod_detector = dlib.cnn_face_detection_model_v1("../pre-trained-model/mmod_human_face_detector.dat")
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -35,7 +34,6 @@ while True:
     fps_counter.update(fps)
     cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-    # Display the frame with detected faces and FPS
     cv2.imshow('Face Detection using dlib-MMOD', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
