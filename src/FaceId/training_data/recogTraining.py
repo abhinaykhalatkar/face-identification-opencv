@@ -67,7 +67,7 @@ def train_model():
 # face_rec_model_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/dlib_face_recognition_resnet_model_v1.dat"
 # shape_predictor_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/shape_predictor_68_face_landmarks.dat"
 # training_data_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data"
-
+# print("model training started. plaease wait")
 # # Initialize dlib models
 # detector = dlib.get_frontal_face_detector()
 # sp = dlib.shape_predictor(shape_predictor_path)
@@ -107,4 +107,5 @@ def train_model():
 # os.makedirs(os.path.dirname("C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data"), exist_ok=True)
 # with open("C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/embeddings.pkl", "wb") as f:
 #  pickle.dump((embeddings, labels), f)
+# print("model trained")
  
