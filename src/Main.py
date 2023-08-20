@@ -1,10 +1,8 @@
-import hupper
+import tkinter as tk
 from FaceDetection import faceDetection_dlib
-
-def main():
-    reloader = hupper.start_reloader('Main.main')
-    faceDetection_dlib.run_face_detection()
+import hupper
+import app  # Import the module you just created
 
 if __name__ == "__main__":
-    main()
-    
+    reloader = hupper.start_reloader('app.main')  # Note the 'app.main' here
+    app.main()
