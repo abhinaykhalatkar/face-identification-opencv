@@ -1,6 +1,5 @@
 import sys
 sys.path.append('C:/Users/abhin/Desktop/face-identification-opencv/src')
-
 import cv2
 import time
 import os
@@ -17,7 +16,6 @@ def start_face_capture(video_canvas, start_capturing=False):
     cap = cv2.VideoCapture(1)
     captured_images = []
     continue_updating = True  
-
     detector_hog, mmod_detector = initialize.initialize_detectors()
 
     def update_canvas():
@@ -44,8 +42,9 @@ def start_face_capture(video_canvas, start_capturing=False):
 
     def capture_images():
         nonlocal continue_updating  
+        
         start_time = time.time()
-        while time.time() - start_time < 5:
+        while time.time() - start_time < 3.3:
             ret, frame = cap.read()
             if not ret:
                 break
@@ -60,7 +59,7 @@ def start_face_capture(video_canvas, start_capturing=False):
 
         name = simpledialog.askstring("Input", "What's your name?")
         if name:
-            save_path = f"src/FaceId/training_data/{name}"
+            save_path = f"src/FaceId/training_data/Picture_db/{name}"
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
                 print(f"User: {name} added to databse")

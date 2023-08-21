@@ -9,7 +9,7 @@ def train_model():
 
     face_rec_model_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/dlib_face_recognition_resnet_model_v1.dat"
     shape_predictor_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/shape_predictor_68_face_landmarks.dat"
-    training_data_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data"
+    training_data_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/Picture_db"
 
     print("model training started")
 
@@ -66,7 +66,7 @@ def train_model():
 
 # face_rec_model_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/dlib_face_recognition_resnet_model_v1.dat"
 # shape_predictor_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/model/shape_predictor_68_face_landmarks.dat"
-# training_data_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data"
+# training_data_path = "C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/Picture_db"
 # print("model training started. plaease wait")
 # # Initialize dlib models
 # detector = dlib.get_frontal_face_detector()
