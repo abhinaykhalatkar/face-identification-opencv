@@ -8,6 +8,8 @@ training_data/
 *.so
 embeddings.pkl
 *.pkl
+cred/
+oneNoteCredentials.py
 
 # Distribution / packaging
 .Python
