@@ -6,7 +6,7 @@ import os
 import stat
 import datetime
 from html2text import html2text
-from onenoteauth import OneNoteAuth
+from .onenoteauth import OneNoteAuth
 
 
 BASE_URL = 'https://www.onenote.com/api/v1.0/me/notes/'

@@ -150,7 +150,12 @@ class OneNoteAuth(object):
 
         conn.sendall(bytes(http_response, encoding='utf-8'))
         conn.close()
-        s.shutdown(socket.SHUT_RDWR)
+        try:
+            if s:
+                s.shutdown(socket.SHUT_RDWR)
+                print('socket shutted down')
+        except Exception as e:
+            logging.error(f"Error shutting down the socket: {e}")
         s.close()
 
         request_line, _ = request.decode().split('\r\n', 1)

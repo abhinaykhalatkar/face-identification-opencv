@@ -10,7 +10,9 @@ embeddings.pkl
 *.pkl
 cred/
 oneNoteCredentials.py
-
+.onenote.ses
+onenote.ses
+SAVE_FILE_DEFAULT
 # Distribution / packaging
 .Python
 build/
@@ -164,4 +166,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 src/FaceId/training_data/embeddings.pkl
+src/FaceId/training_data/embeddings.pkl
+.onenote.save
 src/FaceId/training_data/embeddings.pkl
