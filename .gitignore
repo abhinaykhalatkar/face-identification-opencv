@@ -8,8 +8,9 @@ training_data/
 *.so
 embeddings.pkl
 *.pkl
-cred/
-oneNoteCredentials.py
+cred/token.txt
+cred/token_expiry_time.txt
+credentials.py
 .onenote.ses
 onenote.ses
 SAVE_FILE_DEFAULT
@@ -169,3 +170,5 @@ src/FaceId/training_data/embeddings.pkl
 src/FaceId/training_data/embeddings.pkl
 .onenote.save
 src/FaceId/training_data/embeddings.pkl
+src/cred/token_expiry_time.txt
+src/cred/token.txt

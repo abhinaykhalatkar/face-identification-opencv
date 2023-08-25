@@ -1,5 +1,7 @@
-from cred.oneNoteCredentials import access_token
+# from cred.oneNoteCredentials import access_token
 import requests
+import webbrowser
+import datetime
 from UI.face_capture_ui import open_face_capture_window
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -15,6 +17,12 @@ import sys
 sys.path.append('C:/Users/abhin/Desktop/face-identification-opencv/src')
 # from UI.face_capture_ui import open_face_capture_window
 # from cred.oneNoteCredentials import onenote_instance
+def get_access_token_from_file():
+    try:
+        with open("src/cred/token.txt", "r") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return None
 
 with open("C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/embeddings.pkl", "rb") as f:
     saved_embeddings, saved_labels = pickle.load(f)
@@ -75,38 +83,6 @@ def handle_key_press(event):
     elif event.char == 'o':
         should_open_onenote = True
 
-
-# def capture_face_and_save(detector, cap):
-#     start_time = time.time()
-#     captured_images = []
-#     capture_buffer_scale=1.1
-
-
-#     while time.time() - start_time < 3:
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-#         print('while')
-#         detected_faces = face_detection.detect_faces(frame, detector)
-#         for face in detected_faces:
-#             x, y, w, h = (face.left(), face.top(), face.width(), face.height())
-#             cropped_face = frame[y:y+(h*capture_buffer_scale), x:x+(w*capture_buffer_scale)]
-#             captured_images.append(cropped_face)
-#             print('for')
-
-#         cv2.imshow('Capturing Face', frame)
-#         cv2.waitKey(1)
-
-#     cv2.destroyAllWindows()
-#     return captured_images
-
-# def save_captured_images(name, images):
-#     save_path = f"C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/{name}"
-#     if not os.path.exists(save_path):
-#         os.makedirs(save_path)
-
-#     for idx, img in enumerate(images):
-#         cv2.imwrite(os.path.join(save_path, f"{name}_{idx}.jpg"), img)
 
 def run_face_detection(video_canvas, root):
     global all_windows_closed
@@ -201,6 +177,8 @@ def run_face_detection(video_canvas, root):
             print("user list cleared")
             user_celar_requested = False
         if should_open_onenote:
+            access_token = get_access_token_from_file()
+
             headers = {
                         'Authorization': f'Bearer {access_token}',
                         'Content-Type': 'application/json'
@@ -235,24 +213,51 @@ def run_face_detection(video_canvas, root):
                         pages = response.json().get('value', [])
 
                         # Check if page with student's name exists
-                        student_page = next(
-                            (page for page in pages if page['title'] == student_name), None)
+                        student_page = next((page for page in pages if page['title'] == student_name), None)
 
-                        # If not, create one
-                        if not student_page:
-                            page_data = {
-                                "title": student_name,
-                                # You can customize the content as needed
-                                "content": f"<h1>{student_name}</h1><p>Details about {student_name}</p>"
-                            }
-                            response = requests.post(
-                                pages_url, headers=headers, json=page_data)
-                            if response.status_code == 201:
-                                print(
-                                    f"Page for {student_name} created successfully!")
+                        # If the page exists, open it
+                        if student_page:
+                            print('Page found. Opening...')
+                            if 'links' in student_page and 'oneNoteWebUrl' in student_page['links'] and 'href' in student_page['links']['oneNoteWebUrl']:
+                                oneNoteWebUrl = student_page['links']['oneNoteWebUrl']['href']
+                                webbrowser.open(oneNoteWebUrl, new=2)
                             else:
-                                print(
-                                    f"Failed to create page for {student_name}.")
+                                print("Failed to retrieve OneNote web URL.")
+
+                        # If the page doesn't exist, create it
+                        else:
+                            current_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            boundary = "A300x"
+                            headers = {
+                                'Authorization': f'Bearer {access_token}',
+                                'Content-Type': f'multipart/form-data; boundary={boundary}'
+                            }
+
+                            # Create the multipart content
+                            content = f"--{boundary}\r\n"
+                            content += "Content-Type: application/xhtml+xml\r\n"
+                            content += "Content-Disposition: form-data; name=\"Presentation\"\r\n\r\n"
+                            content += f"<html><head><title>{student_name}</title></head><body>"
+                            content += f"<time datetime=\"{current_datetime}\">{current_datetime}</time>"
+                            content += f"</body></html>\r\n"
+                            content += f"--{boundary}--\r\n"
+
+                            response = requests.post(pages_url, headers=headers, data=content.encode('utf-8'))
+
+                            if response.status_code == 201:
+                                print(f"Page for {student_name} created successfully!")
+                                # Open the newly created page
+                                new_page_data = response.json()
+                                if 'links' in new_page_data and 'oneNoteWebUrl' in new_page_data['links'] and 'href' in new_page_data['links']['oneNoteWebUrl']:
+                                    oneNoteWebUrl = new_page_data['links']['oneNoteWebUrl']['href']
+                                    webbrowser.open(oneNoteWebUrl, new=2)
+                                else:
+                                    print("Failed to retrieve OneNote web URL for the newly created page.")
+                            else:
+                                print(f"Failed to create page for {student_name}.")
+                                print(f"Status Code: {response.status_code}")
+                                print(f"Response: {response.text}")
+
 
             should_open_onenote = False
 

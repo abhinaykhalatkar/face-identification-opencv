@@ -1,5 +1,3 @@
-import tkinter as tk
-from FaceDetection import faceDetection_dlib
 import hupper
 import app  
 

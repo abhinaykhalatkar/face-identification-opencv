@@ -1,10 +1,27 @@
+import sys
+sys.path.append('C:/Users/abhin/Desktop/face-identification-opencv/src')
 import tkinter as tk
 from FaceDetection import faceDetection_dlib
 import ctypes
+import os,time,subprocess
+
 
 ctypes.cdll.LoadLibrary("C:/Users/abhin/Desktop/face-identification-opencv/src/FaceId/training_data/zlibwapi.dll")
 
 def main():
+    def is_token_expired():
+        try:
+            with open('src/cred/token_expiry_time.txt', 'r') as f:
+                expiry_time = float(f.read())
+                return time.time() > expiry_time
+        except:
+            return True
+
+    if is_token_expired():
+        process = subprocess.Popen(['python', 'src/cred/oneNoteCredentials.py'])
+        process.wait()
+        # os.system('python src/cred/oneNoteCredentials.py')
+        
     root = tk.Tk()
     root.title("Face Identification")
 
