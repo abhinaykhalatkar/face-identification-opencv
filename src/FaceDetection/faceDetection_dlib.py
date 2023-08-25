@@ -211,9 +211,11 @@ def run_face_detection(video_canvas, root):
                         pages_url = f"https://graph.microsoft.com/v1.0/me/onenote/sections/{students_data_thesis_section['id']}/pages"
                         response = requests.get(pages_url, headers=headers)
                         pages = response.json().get('value', [])
+                        print([page['title'] for page in pages])
 
                         # Check if page with student's name exists
-                        student_page = next((page for page in pages if page['title'] == student_name), None)
+                        # student_page = next((page for page in pages if page['title'] == student_name), None)
+                        student_page = next((page for page in pages if page['title'].strip().lower() == student_name.strip().lower()), None)
 
                         # If the page exists, open it
                         if student_page:

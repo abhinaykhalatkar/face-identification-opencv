@@ -5,12 +5,16 @@ from threading import Thread
 from credentials import client_id,client_secret,tenant_id
 
 app_running = True 
-def stop_flask_app():
-    func = request.environ.get('werkzeug.server.shutdown')
+def delayed_shutdown(func):
+    time.sleep(2)  # Delay for 2 seconds
     if func:
         func()
     else:
-        os._exit(0) 
+        os._exit(0)
+
+def stop_flask_app():
+    func = request.environ.get('werkzeug.server.shutdown')
+    threading.Thread(target=delayed_shutdown, args=(func,)).start()
     
 token_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
 redirect_uri = 'http://localhost:8085/callback'
@@ -64,9 +68,10 @@ def callback():
         with open('src/cred/token_expiry_time.txt', 'w') as f:
             print(expiry_time)
             f.write(str(expiry_time))
-        app_running = False
-        stop_flask_app()
-        return "Logged in successfully! You can close this window."
+        app_running = False 
+        response = "Logged in successfully! You can close this window."
+        stop_flask_app() 
+        return response
     else:
         error_description = token_response_data.get('error_description', 'Unknown error')
         return f"Failed to retrieve access token. Error: {error_description}"
