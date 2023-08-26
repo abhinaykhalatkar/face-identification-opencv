@@ -54,7 +54,7 @@ def initialize_dlib_models():
 # 41
 
 
-def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.41):
+def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.40):
     distances = [np.linalg.norm(np.array(
         face_descriptor) - np.array(embedding)) for embedding in saved_embeddings]
     min_distance_index = np.argmin(distances)
@@ -181,10 +181,11 @@ def run_face_detection(video_canvas, root):
 
             headers = {
                         'Authorization': f'Bearer {access_token}',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
                     }
             print("opening one note...")
-            notebooks_url = 'https://graph.microsoft.com/beta/me/onenote/notebooks'
+            notebooks_url = 'https://graph.microsoft.com/v1.0/me/onenote/notebooks'
             response = requests.get(notebooks_url, headers=headers)
             if response.status_code != 200:
                     print(f"Failed to retrieve notebooks. Status code: {response.status_code}, Response: {response.text}")
@@ -195,7 +196,7 @@ def run_face_detection(video_canvas, root):
             student_data_notebook = next(
                 (nb for nb in notebooks if nb['displayName'] == 'student_data'), None)
             if student_data_notebook:
-                sections_url = f"https://graph.microsoft.com/beta/me/onenote/notebooks/{student_data_notebook['id']}/sections"
+                sections_url = f"https://graph.microsoft.com/v1.0/me/onenote/notebooks/{student_data_notebook['id']}/sections"
                 response = requests.get(sections_url, headers=headers)
                 if response.status_code != 200:
                     print(f"Failed to retrieve notebooks. Status code: {response.status_code}, Response: {response.text}")
@@ -203,14 +204,16 @@ def run_face_detection(video_canvas, root):
                 sections = response.json().get('value', [])
 
                 # Find the 'students_data_thesis' section
+                print(sections)
                 students_data_thesis_section = next(
                     (sec for sec in sections if sec['displayName'] == 'students_data_thesis'), None)
 
                 if students_data_thesis_section:
                     for student_name in user_Names_for_oneNote:
-                        pages_url = f"https://graph.microsoft.com/beta/me/onenote/sections/{students_data_thesis_section['id']}/pages?$top=100"
+                        pages_url = f"https://graph.microsoft.com/v1.0/me/onenote/pages"
                         response = requests.get(pages_url, headers=headers)
                         pages = response.json().get('value', [])
+                        print([("========>",page['title']) for page in pages])
                         # print([page for page in pages])
                         # return
                         # Check if page with student's name exists
@@ -232,42 +235,39 @@ def run_face_detection(video_canvas, root):
                             boundary = "A300x"
                             headers = {
                                 'Authorization': f'Bearer {access_token}',
-                                'Content-Type': f'multipart/form-data; boundary={boundary}'
+                                'Content-Type': f'multipart/form-data; boundary={boundary}',
+                                'Cache-Control': 'no-cache'
                             }
 
                             # Create the multipart content
+                            # content = f"--{boundary}\r\n"
+                            # content += "Content-Type: application/xhtml+xml\r\n"
+                            # content += "Content-Disposition: form-data; name=\"Presentation\"\r\n\r\n"
+                            # content += f"""<!DOCTYPE html>
+                            #             <html>
+                            #             <head>
+                            #             <title>{student_name}</title>
+                            #             <meta name={student_name} content="{current_datetime}" />
+                            #             </head>
+                            #             <body>
+                            #                 <p>Add some content and save file</p>
+                            #             </body>
+                            #             </html>\r\n"""
+                                        
                             content = f"--{boundary}\r\n"
-                            content += "Content-Type: application/xhtml+xml\r\n"
-                            content += "Content-Disposition: form-data; name=\"Presentation\"\r\n\r\n"
+                            content += "Content-Disposition: form-data; name=\"Presentation\"\r\n"
+                            content += "Content-Type: text/html\r\n\r\n"
                             content += f"""<!DOCTYPE html>
-                                        <html>
-                                        <head>
-                                        <title>{student_name}</title>
-                                        <meta name="created" content="{current_datetime}" />
-                                        </head>
-                                        <body>
-                                            <p>Add some content and save file</p>
-                                        </body>
-                                        </html>\r\n"""
+                            <html>
+                            <head>
+                                <title>{student_name}</title>
+                                <meta name="created" content="{current_datetime}" />
+                            </head>
+                            <body>
+                                <p>Here's an image from an online source:</p>
+                            </body>
+                            </html>\r\n"""
                             content += f"--{boundary}--\r\n"
-                                                        # content = f"--{boundary}\r\n"
-                            # content +="""<!DOCTYPE html>
-                            #                 <html>
-                            #                 <head>
-                            #                 <title>{student_name}</title>
-                            #                     <meta name="created" content={current_datetime} />
-                            #                 </head>
-                            #                 <body>
-                            #                     <p>Here's an image from an online source:</p>
-                            #                     <p>Here's an image uploaded as binary data:</p>
-                            #                     <p>Here's a file attachment:</p>
-                            #                 </body>
-                            #                 </html>"""
-                            # # content += "Content-Type: application/xhtml+xml\r\n"
-                            # # content += "Content-Disposition: form-data; name=\"Presentation\"\r\n\r\n"
-                            # # content += f"<html><head><title>{student_name}</title></head><body>"
-                            # # content += f"<time datetime=\"{current_datetime}\">{current_datetime}</time>"
-                            # # content += f"</body></html>\r\n"
                             # content += f"--{boundary}--\r\n"
 
                             response = requests.post(pages_url, headers=headers, data=content.encode('utf-8'))
