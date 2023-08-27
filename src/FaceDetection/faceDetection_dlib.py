@@ -191,7 +191,7 @@ def run_face_detection(video_canvas, root):
                     print(f"Failed to retrieve notebooks. Status code: {response.status_code}, Response: {response.text}")
                     return
             notebooks = response.json().get('value', [])
-
+            
             # Find the 'student_data' notebook
             student_data_notebook = next(
                 (nb for nb in notebooks if nb['displayName'] == 'student_data'), None)
@@ -199,61 +199,53 @@ def run_face_detection(video_canvas, root):
                 sections_url = f"https://graph.microsoft.com/v1.0/me/onenote/notebooks/{student_data_notebook['id']}/sections"
                 response = requests.get(sections_url, headers=headers)
                 if response.status_code != 200:
-                    print(f"Failed to retrieve notebooks. Status code: {response.status_code}, Response: {response.text}")
+                    print(f"Failed to retrieve sections. Status code: {response.status_code}, Response: {response.text}")
                     return
                 sections = response.json().get('value', [])
-
-                # Find the 'students_data_thesis' section
-                print(sections)
-                students_data_thesis_section = next(
-                    (sec for sec in sections if sec['displayName'] == 'students_data_thesis'), None)
-
-                if students_data_thesis_section:
-                    for student_name in user_Names_for_oneNote:
-                        pages_url = f"https://graph.microsoft.com/v1.0/me/onenote/pages"
+                for student_name in user_Names_for_oneNote:
+                    # Check if section with student's name exists
+                    student_section = next((sec for sec in sections if sec['displayName'].strip().lower() == student_name.strip().lower()), None)
+                    
+                    # If the section exists, open the first page in it
+                    if student_section:
+                        pages_url = f"https://graph.microsoft.com/v1.0/me/onenote/sections/{student_section['id']}/pages"
                         response = requests.get(pages_url, headers=headers)
                         pages = response.json().get('value', [])
-                        print([("========>",page['title']) for page in pages])
-                        # print([page for page in pages])
-                        # return
-                        # Check if page with student's name exists
-                        # student_page = next((page for page in pages if page['title'] == student_name), None)
-                        student_page = next((page for page in pages if page['title'].strip().lower() == student_name.strip().lower()), None)
-
-                        # If the page exists, open it
-                        if student_page:
-                            print('Page found. Opening...')
-                            if 'links' in student_page and 'oneNoteWebUrl' in student_page['links'] and 'href' in student_page['links']['oneNoteWebUrl']:
-                                oneNoteWebUrl = student_page['links']['oneNoteWebUrl']['href']
+                        if pages:
+                            first_page = pages[0]
+                            if 'links' in first_page and 'oneNoteWebUrl' in first_page['links'] and 'href' in first_page['links']['oneNoteWebUrl']:
+                                oneNoteWebUrl = first_page['links']['oneNoteWebUrl']['href']
                                 webbrowser.open(oneNoteWebUrl, new=2)
                             else:
                                 print("Failed to retrieve OneNote web URL.")
-
-                        # If the page doesn't exist, create it
-                        else:
-                            current_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    # If the section doesn't exist, create it and an empty page within
+                    else:
+                        data = {
+                            "displayName": student_name
+                        }
+                        response = requests.post(sections_url, headers=headers, json=data)
+                        
+                        if response.status_code == 201:
+                            print(f"Section for {student_name} created successfully!")
+                            new_section_data = response.json()
+                            new_section_id = new_section_data['id']
+                            
+                            # Create an empty page within the new section
+                            # page_data = {
+                            #     "title": "Empty Page"
+                            # }
+                            
+                            pages_url = f"https://graph.microsoft.com/v1.0/me/onenote/sections/{new_section_id}/pages"
+                            # response = requests.post(pages_url, headers=headers, json=page_data)
                             boundary = "A300x"
-                            headers = {
+                            current_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            headers_multipart = {
                                 'Authorization': f'Bearer {access_token}',
                                 'Content-Type': f'multipart/form-data; boundary={boundary}',
                                 'Cache-Control': 'no-cache'
                             }
 
-                            # Create the multipart content
-                            # content = f"--{boundary}\r\n"
-                            # content += "Content-Type: application/xhtml+xml\r\n"
-                            # content += "Content-Disposition: form-data; name=\"Presentation\"\r\n\r\n"
-                            # content += f"""<!DOCTYPE html>
-                            #             <html>
-                            #             <head>
-                            #             <title>{student_name}</title>
-                            #             <meta name={student_name} content="{current_datetime}" />
-                            #             </head>
-                            #             <body>
-                            #                 <p>Add some content and save file</p>
-                            #             </body>
-                            #             </html>\r\n"""
-                                        
                             content = f"--{boundary}\r\n"
                             content += "Content-Disposition: form-data; name=\"Presentation\"\r\n"
                             content += "Content-Type: text/html\r\n\r\n"
@@ -261,20 +253,17 @@ def run_face_detection(video_canvas, root):
                             <html>
                             <head>
                                 <title>{student_name}</title>
-                                <meta name="created" content="{current_datetime}" />
+                                <meta name={student_name} content="{current_datetime}" />
                             </head>
                             <body>
-                                <p>Here's an image from an online source:</p>
+                                <p>This is an empty page for {student_name}.</p>
                             </body>
                             </html>\r\n"""
                             content += f"--{boundary}--\r\n"
-                            # content += f"--{boundary}--\r\n"
 
-                            response = requests.post(pages_url, headers=headers, data=content.encode('utf-8'))
+                            response = requests.post(pages_url, headers=headers_multipart, data=content.encode('utf-8'))
 
                             if response.status_code == 201:
-                                print(f"Page for {student_name} created successfully!")
-                                # Open the newly created page
                                 new_page_data = response.json()
                                 if 'links' in new_page_data and 'oneNoteWebUrl' in new_page_data['links'] and 'href' in new_page_data['links']['oneNoteWebUrl']:
                                     oneNoteWebUrl = new_page_data['links']['oneNoteWebUrl']['href']
@@ -282,12 +271,132 @@ def run_face_detection(video_canvas, root):
                                 else:
                                     print("Failed to retrieve OneNote web URL for the newly created page.")
                             else:
-                                print(f"Failed to create page for {student_name}.")
+                                print(f"Failed to create page in the new section for {student_name}.")
                                 print(f"Status Code: {response.status_code}")
                                 print(f"Response: {response.text}")
-
+                        else:
+                            print(f"Failed to create section for {student_name}.")
+                            print(f"Status Code: {response.status_code}")
+                            print(f"Response: {response.text}")
 
             should_open_onenote = False
+
+        # if should_open_onenote:
+        #     access_token = get_access_token_from_file()
+
+        #     headers = {
+        #                 'Authorization': f'Bearer {access_token}',
+        #                 'Content-Type': 'application/json',
+        #                 'Cache-Control': 'no-cache'
+        #             }
+        #     print("opening one note...")
+        #     notebooks_url = 'https://graph.microsoft.com/v1.0/me/onenote/notebooks'
+        #     response = requests.get(notebooks_url, headers=headers)
+        #     if response.status_code != 200:
+        #             print(f"Failed to retrieve notebooks. Status code: {response.status_code}, Response: {response.text}")
+        #             return
+        #     notebooks = response.json().get('value', [])
+        #     # print([("========>",note['displayName'],note['id']) for note in notebooks])
+            
+        #     # Find the 'student_data' notebook
+        #     student_data_notebook = next(
+        #         (nb for nb in notebooks if nb['displayName'] == 'student_data'), None)
+        #     if student_data_notebook:
+        #         sections_url = f"https://graph.microsoft.com/v1.0/me/onenote/notebooks/{student_data_notebook['id']}/sections"
+        #         print(sections_url)
+        #         response = requests.get(sections_url, headers=headers)
+        #         if response.status_code != 200:
+        #             print(f"Failed to retrieve notebooks. Status code: {response.status_code}, Response: {response.text}")
+        #             return
+        #         sections = response.json().get('value', [])
+        #         print([("========>",sec['displayName'],sec['id']) for sec in sections])
+        #         # return
+        #         # Find the 'students_data_thesis' section
+        #         students_data_thesis_section = next(
+        #             (sec for sec in sections if sec['displayName'] == 'students_data_thesis'), None)
+
+        #         if students_data_thesis_section:
+        #             for student_name in user_Names_for_oneNote:
+        #                 print(student_data_notebook['id'],students_data_thesis_section['id'])
+        #                 pages_url = f"https://graph.microsoft.com/v1.0/me/onenote/sections/{students_data_thesis_section['id']}/pages"
+        #                 response = requests.get(pages_url, headers=headers)
+        #                 pages = response.json().get('value', [])
+        #                 print([("========>",page['title']) for page in pages])
+        #                 return
+        #                 # print([("========>",page['title']) for page in pages])
+        #                 # print([page for page in pages])
+        #                 # return
+        #                 # Check if page with student's name exists
+        #                 # student_page = next((page for page in pages if page['title'] == student_name), None)
+        #                 student_page = next((page for page in pages if page['title'].strip().lower() == student_name.strip().lower()), None)
+        #                 # If the page exists, open it
+        #                 if student_page:
+        #                     print('Page found. Opening...')
+        #                     if 'links' in student_page and 'oneNoteWebUrl' in student_page['links'] and 'href' in student_page['links']['oneNoteWebUrl']:
+        #                         oneNoteWebUrl = student_page['links']['oneNoteWebUrl']['href']
+        #                         webbrowser.open(oneNoteWebUrl, new=2)
+        #                     else:
+        #                         print("Failed to retrieve OneNote web URL.")
+
+        #                 # If the page doesn't exist, create it
+        #                 else:
+        #                     current_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        #                     boundary = "A300x"
+        #                     headers = {
+        #                         'Authorization': f'Bearer {access_token}',
+        #                         'Content-Type': f'multipart/form-data; boundary={boundary}',
+        #                         'Cache-Control': 'no-cache'
+        #                     }
+
+        #                     # Create the multipart content
+        #                     # content = f"--{boundary}\r\n"
+        #                     # content += "Content-Type: application/xhtml+xml\r\n"
+        #                     # content += "Content-Disposition: form-data; name=\"Presentation\"\r\n\r\n"
+        #                     # content += f"""<!DOCTYPE html>
+        #                     #             <html>
+        #                     #             <head>
+        #                     #             <title>{student_name}</title>
+        #                     #             <meta name={student_name} content="{current_datetime}" />
+        #                     #             </head>
+        #                     #             <body>
+        #                     #                 <p>Add some content and save file</p>
+        #                     #             </body>
+        #                     #             </html>\r\n"""
+                                        
+        #                     content = f"--{boundary}\r\n"
+        #                     content += "Content-Disposition: form-data; name=\"Presentation\"\r\n"
+        #                     content += "Content-Type: text/html\r\n\r\n"
+        #                     content += f"""<!DOCTYPE html>
+        #                     <html>
+        #                     <head>
+        #                         <title>{student_name}</title>
+        #                         <meta name="created" content="{current_datetime}" />
+        #                     </head>
+        #                     <body>
+        #                         <p>Here's an image from an online source:</p>
+        #                     </body>
+        #                     </html>\r\n"""
+        #                     content += f"--{boundary}--\r\n"
+        #                     # content += f"--{boundary}--\r\n"
+
+        #                     response = requests.post(pages_url, headers=headers, data=content.encode('utf-8'))
+
+        #                     if response.status_code == 201:
+        #                         print(f"Page for {student_name} created successfully!")
+        #                         # Open the newly created page
+        #                         new_page_data = response.json()
+        #                         if 'links' in new_page_data and 'oneNoteWebUrl' in new_page_data['links'] and 'href' in new_page_data['links']['oneNoteWebUrl']:
+        #                             oneNoteWebUrl = new_page_data['links']['oneNoteWebUrl']['href']
+        #                             webbrowser.open(oneNoteWebUrl, new=2)
+        #                         else:
+        #                             print("Failed to retrieve OneNote web URL for the newly created page.")
+        #                     else:
+        #                         print(f"Failed to create page for {student_name}.")
+        #                         print(f"Status Code: {response.status_code}")
+        #                         print(f"Response: {response.text}")
+
+
+            #  should_open_onenote = False
 
         if add_person_clicked or exit_requested or all_windows_closed:
             break
