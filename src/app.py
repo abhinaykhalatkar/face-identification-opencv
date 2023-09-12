@@ -34,8 +34,12 @@ def main():
     btn_frame = tk.Frame(root)
     btn_frame.pack(side=tk.RIGHT, padx=10, pady=10)
 
-    add_person_btn = tk.Button(btn_frame, text="Add Person=>", command=faceDetection_dlib.on_add_person_click)
+    add_person_btn = tk.Button(btn_frame, text="Add Person", command=faceDetection_dlib.on_add_person_click)
     add_person_btn.pack()
+    
+    open_oneNote_btn = tk.Button(btn_frame, text="Open OneNote", command=faceDetection_dlib.on_open_oneNote_click)
+    open_oneNote_btn.pack()
+    
 
     root.after(10, lambda: faceDetection_dlib.run_face_detection(video_canvas, root))
     root.mainloop()

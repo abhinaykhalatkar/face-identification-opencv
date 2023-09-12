@@ -14,7 +14,8 @@ from FaceId.training_data.recogTraining import train_model
 
 
 def start_face_capture(video_canvas, start_capturing=False):
-    cap = cv2.VideoCapture(1)
+    #for capture
+    cap = cv2.VideoCapture(0)
     captured_images = []
     continue_updating = True  
     detector_hog, mmod_detector = initialize.initialize_detectors()

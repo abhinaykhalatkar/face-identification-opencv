@@ -37,7 +37,7 @@ add_person_clicked = False
 exit_requested = False
 user_Names_for_oneNote = []
 is_namelist_requested = False
-user_celar_requested = False
+user_clear_requested = False
 should_open_onenote = False
 # onenote_instance.get_structure()
 
@@ -52,10 +52,10 @@ def initialize_dlib_models():
     global sp, facerec
     sp = dlib.shape_predictor(shape_predictor_path)
     facerec = dlib.face_recognition_model_v1(face_rec_model_path)
-# 41
+# 0.40
 
 
-def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.40):
+def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.50):
     distances = [np.linalg.norm(np.array(
         face_descriptor) - np.array(embedding)) for embedding in saved_embeddings]
     min_distance_index = np.argmin(distances)
@@ -68,33 +68,35 @@ def identify_face(face_descriptor, saved_embeddings, saved_labels, threshold=0.4
 def on_add_person_click():
     global add_person_clicked
     add_person_clicked = True
-
-
+    
+def on_open_oneNote_click():
+    global should_open_onenote
+    should_open_onenote = True
+    
 def handle_key_press(event):
     global is_namelist_requested
     global exit_requested
-    global user_celar_requested
-    global should_open_onenote
+    global user_clear_requested
     if event.char == 'q':
         exit_requested = True
     elif event.char == 'w':
         is_namelist_requested = True
     elif event.char == 'c':
-        user_celar_requested = True
-    elif event.char == 'o':
-        should_open_onenote = True
+        user_clear_requested = True
+
 
 
 def run_face_detection(video_canvas, root):
     global all_windows_closed
     global is_namelist_requested
-    global user_celar_requested
+    global user_clear_requested
     global should_open_onenote
     initialize_dlib_models()
     fps_counter = FPSCounter()
     f1_score_counter = F1ScoreCounter()
     detector_hog, mmod_detector = initialize.initialize_detectors()
-    cap = cv2.VideoCapture(1)
+    #for capture
+    cap = cv2.VideoCapture(0)
     detection_history = deque(maxlen=5)
     reset_interval = 1
     start_time = time.time()
@@ -166,10 +168,12 @@ def run_face_detection(video_canvas, root):
         prev_time = current_time
         fps_counter.update(fps)
         current_f1_score = f1_score_counter.calculate_f1_score()
-        cv2.putText(frame, f"{fps:.2f}", (5, 20),
+        # cv2.putText(frame, f"{fps:.2f}", (5, 20),
+        #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        cv2.putText(frame, f"{user_Names_for_oneNote}", (5, 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-        cv2.putText(frame, f"F1-Score: {current_f1_score:.2f}", (5, 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        #cv2.putText(frame, f"F1-Score: {current_f1_score:.2f}", (5, 40),
+        #        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_pil = Image.fromarray(frame_rgb)
@@ -181,10 +185,10 @@ def run_face_detection(video_canvas, root):
         if is_namelist_requested:
             print(user_Names_for_oneNote)
             is_namelist_requested = False
-        if user_celar_requested:
+        if user_clear_requested:
             user_Names_for_oneNote.clear()
             print("user list cleared")
-            user_celar_requested = False
+            user_clear_requested = False
         if should_open_onenote:
             access_token = get_access_token_from_file()
 
